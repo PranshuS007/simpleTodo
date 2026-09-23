@@ -1,18 +1,22 @@
+:root{--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#cbd5e1;--item-border:#f1f5f9;--filter-bg:#e2e8f0;--filter-text:#0f172a;--shadow:0 8px 30px rgba(0,0,0,.1)}
+body.dark{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--border:#334155;--item-border:#334155;--filter-bg:#334155;--filter-text:#f1f5f9;--shadow:0 8px 30px rgba(0,0,0,.4)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;background:#f1f5f9;min-height:100vh;display:flex;justify-content:center;padding:40px 16px}
-.app{background:#fff;max-width:480px;width:100%;height:fit-content;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.1);padding:24px}
-h1{margin-bottom:16px;font-size:1.5rem}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;justify-content:center;padding:40px 16px;transition:background .3s,color .3s}
+.app{background:var(--card);max-width:480px;width:100%;height:fit-content;border-radius:12px;box-shadow:var(--shadow);padding:24px;transition:background .3s}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+h1{font-size:1.5rem}
+#theme-toggle{background:var(--filter-bg);color:var(--text);font-size:1.1rem;padding:8px 12px}
 #todo-form{display:flex;gap:8px;margin-bottom:12px}
-#todo-input{flex:1;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:1rem}
+#todo-input{flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:1rem;background:var(--card);color:var(--text)}
 button{padding:10px 14px;border:none;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer}
 button:hover{opacity:.9}
 .filters{display:flex;gap:8px;margin-bottom:12px}
-.filters button{background:#e2e8f0;color:#0f172a}
-.filters button.active{background:#0f172a;color:#fff}
+.filters button{background:var(--filter-bg);color:var(--filter-text)}
+.filters button.active{background:#2563eb;color:#fff}
 ul{list-style:none}
-li{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #f1f5f9}
+li{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--item-border)}
 li.done span{text-decoration:line-through;color:#94a3b8}
 li span{flex:1}
 li .del{background:#ef4444;padding:6px 10px}
-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:#64748b}
+footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:var(--muted)}
 #clear-completed{background:transparent;color:#ef4444;padding:6px}

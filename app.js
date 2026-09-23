@@ -28,6 +28,22 @@ filterBtns.forEach(b => b.addEventListener('click', () => {
   render();
 }));
 
+const themeBtn = document.getElementById('theme-toggle');
+
+let theme = localStorage.getItem('theme') || 'light';
+applyTheme();
+
+themeBtn.addEventListener('click', () => {
+  theme = theme === 'light' ? 'dark' : 'light';
+  localStorage.setItem('theme', theme);
+  applyTheme();
+});
+
+function applyTheme() {
+  document.body.classList.toggle('dark', theme === 'dark');
+  themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+
 function save() { localStorage.setItem('todos', JSON.stringify(todos)); }
 
 function render() {
