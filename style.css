@@ -36,6 +36,16 @@ body.dark .badge.high{background:#7f1d1d;color:#fecaca}
 body.dark .badge.medium{background:#713f12;color:#fef08a}
 body.dark .badge.low{background:#14532d;color:#bbf7d0}
 li .del{background:#ef4444;padding:6px 10px}
+.header-right{display:flex;gap:8px;align-items:center}
+#user-email{font-size:.8rem;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis}
+#logout-btn{background:transparent;color:var(--muted);padding:6px;font-size:.85rem}
+.hidden{display:none!important}
+#auth-box{display:flex;flex-direction:column;gap:10px;padding:12px 0}
+#auth-box h2{font-size:1.1rem}
+#auth-box input{padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:1rem;background:var(--card);color:var(--text)}
+#auth-error{color:#ef4444;font-size:.85rem;min-height:1.2em}
+.auth-switch{font-size:.85rem;color:var(--muted)}
+.auth-switch a{color:#2563eb}
 footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:var(--muted)}
 #clear-completed{background:transparent;color:#ef4444;padding:6px}
 .empty{text-align:center;color:var(--muted);padding:24px 0}

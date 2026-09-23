@@ -10,8 +10,21 @@
 <main class="app">
   <div class="header">
     <h1>✅ My Todos</h1>
-    <button id="theme-toggle" title="Toggle dark mode">🌙</button>
+    <div class="header-right">
+      <span id="user-email"></span>
+      <button id="logout-btn" class="hidden" title="Log out">Logout</button>
+      <button id="theme-toggle" title="Toggle dark mode">🌙</button>
+    </div>
   </div>
+  <div id="auth-box">
+    <h2 id="auth-title">Login</h2>
+    <input id="auth-email" type="email" placeholder="Email" autocomplete="email">
+    <input id="auth-password" type="password" placeholder="Password (min 4 chars)" autocomplete="current-password">
+    <div id="auth-error"></div>
+    <button id="auth-submit">Login</button>
+    <p class="auth-switch"><span id="auth-switch-text">No account?</span> <a href="#" id="auth-switch">Register</a></p>
+  </div>
+  <div id="app-box" class="hidden">
   <form id="todo-form">
     <input id="todo-input" type="text" placeholder="What needs to be done?" autocomplete="off" required>
     <select id="priority-input" title="Priority">
@@ -46,6 +59,7 @@
     <span id="count"></span>
     <button id="clear-completed">Clear completed</button>
   </footer>
+</div><!-- /app-box -->
 </main>
 <script src="app.js"></script>
 </body>

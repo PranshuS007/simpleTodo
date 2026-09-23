@@ -11,6 +11,73 @@ const filterBtns = document.querySelectorAll('.filters button');
 const themeBtn = document.getElementById('theme-toggle');
 const progressBar = document.getElementById('progress-bar');
 const progressLabel = document.getElementById('progress-label');
+// --- auth + API (server if present, else localStorage fallback) ---
+const authBox = document.getElementById('auth-box');
+const appBox = document.getElementById('app-box');
+const authEmail = document.getElementById('auth-email');
+const authPw = document.getElementById('auth-password');
+const authErr = document.getElementById('auth-error');
+const authSubmit = document.getElementById('auth-submit');
+const authTitle = document.getElementById('auth-title');
+const authSwitch = document.getElementById('auth-switch');
+const authSwitchText = document.getElementById('auth-switch-text');
+const userEmailEl = document.getElementById('user-email');
+const logoutBtn = document.getElementById('logout-btn');
+let authMode = 'login'; // or 'register'
+let token = localStorage.getItem('token') || '';
+let userEmail = localStorage.getItem('userEmail') || '';
+let serverMode = false;
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}), ...(opts.headers || {}) },
+  });
+  if (r.status === 401) { doLogout(); throw new Error('Session expired — please log in again.'); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+async function detectServer() {
+  try {
+    const r = await fetch('/api/todos', { headers: token ? { Authorization: 'Bearer ' + token } : {} });
+    serverMode = r.status !== 404;
+    if (r.status === 401) { token = ''; }
+    return serverMode;
+  } catch { serverMode = false; return false; }
+}
+function showApp(loggedIn) {
+  authBox.classList.toggle('hidden', loggedIn);
+  appBox.classList.toggle('hidden', !loggedIn);
+  logoutBtn.classList.toggle('hidden', !loggedIn);
+  userEmailEl.textContent = loggedIn ? userEmail : '';
+}
+authSwitch.addEventListener('click', e => {
+  e.preventDefault();
+  authMode = authMode === 'login' ? 'register' : 'login';
+  authTitle.textContent = authMode === 'login' ? 'Login' : 'Register';
+  authSubmit.textContent = authMode === 'login' ? 'Login' : 'Register';
+  authSwitchText.textContent = authMode === 'login' ? 'No account?' : 'Have an account?';
+  authSwitch.textContent = authMode === 'login' ? 'Register' : 'Login';
+  authErr.textContent = '';
+});
+authSubmit.addEventListener('click', async () => {
+  authErr.textContent = '';
+  try {
+    const d = await api('/api/' + authMode, {
+      method: 'POST', body: JSON.stringify({ email: authEmail.value, password: authPw.value }),
+    });
+    token = d.token; userEmail = d.email;
+    localStorage.setItem('token', token); localStorage.setItem('userEmail', userEmail);
+    showApp(true); await loadTodos(); render();
+  } catch (e) { authErr.textContent = e.message; }
+});
+function doLogout() {
+  token = ''; userEmail = '';
+  localStorage.removeItem('token'); localStorage.removeItem('userEmail');
+  todos = []; showApp(false); render();
+}
+logoutBtn.addEventListener('click', doLogout);
 
 let todos = JSON.parse(localStorage.getItem('todos') || '[]');
 // migrate old todos without new fields
@@ -34,15 +101,31 @@ function applyTheme() {
 }
 
 // --- events ---
-form.addEventListener('submit', e => {
+form.addEventListener('submit', async e => {
   e.preventDefault();
   const text = input.value.trim();
   if (!text) return;
-  todos.unshift({ id: Date.now(), text, done: false, priority: priorityInput.value, due: dueInput.value });
+  const todo = { text, done: false, priority: priorityInput.value, due: dueInput.value };
+  if (serverMode) {
+    const r = await api('/api/todos', { method: 'POST', body: JSON.stringify(todo) }).catch(err => { alert(err.message); return null; });
+    if (!r) return;
+    todo.id = r.id;
+  } else {
+    todo.id = Date.now();
+  }
+  todos.unshift(todo);
   input.value = ''; dueInput.value = ''; priorityInput.value = 'medium';
   save(); render();
 });
-clearBtn.addEventListener('click', () => { todos = todos.filter(t => !t.done); save(); render(); });
+clearBtn.addEventListener('click', async () => {
+  if (serverMode) {
+    for (const t of todos.filter(t => t.done)) {
+      try { await api('/api/todos/' + t.id, { method: 'DELETE' }); } catch {}
+    }
+    await loadTodos();
+  } else todos = todos.filter(t => !t.done);
+  save(); render();
+});
 filterBtns.forEach(b => b.addEventListener('click', () => {
   filter = b.dataset.filter;
   filterBtns.forEach(x => x.classList.toggle('active', x === b));
@@ -51,7 +134,21 @@ filterBtns.forEach(b => b.addEventListener('click', () => {
 searchInput.addEventListener('input', () => { search = searchInput.value.toLowerCase(); render(); });
 sortSelect.addEventListener('change', () => { sort = sortSelect.value; localStorage.setItem('sort', sort); render(); });
 
-function save() { localStorage.setItem('todos', JSON.stringify(todos)); }
+function save() {
+  if (serverMode) return; // server is source of truth
+  localStorage.setItem('todos', JSON.stringify(todos));
+}
+async function syncTodo(t, patch) {
+  Object.assign(t, patch);
+  if (serverMode) { try { await api('/api/todos/' + t.id, { method: 'PATCH', body: JSON.stringify(patch) }); } catch (e) { alert(e.message); } }
+  else save();
+  render();
+}
+async function loadTodos() {
+  if (!serverMode) return;
+  try { todos = await api('/api/todos'); }
+  catch (e) { console.warn(e.message); }
+}
 
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 
@@ -85,7 +182,7 @@ function render() {
 
     const cb = document.createElement('input');
     cb.type = 'checkbox'; cb.checked = t.done;
-    cb.addEventListener('change', () => { t.done = cb.checked; save(); render(); });
+    cb.addEventListener('change', () => syncTodo(t, { done: cb.checked }));
 
     const span = document.createElement('span');
     span.textContent = t.text;
@@ -99,7 +196,7 @@ function render() {
     }
     span.addEventListener('dblclick', () => {
       const v = prompt('Edit todo:', t.text);
-      if (v !== null && v.trim()) { t.text = v.trim(); save(); render(); }
+      if (v !== null && v.trim()) syncTodo(t, { text: v.trim() });
     });
 
     const badge = document.createElement('span');
@@ -108,13 +205,15 @@ function render() {
     badge.title = 'Click to cycle priority';
     badge.style.cursor = 'pointer';
     badge.addEventListener('click', () => {
-      t.priority = t.priority === 'low' ? 'medium' : t.priority === 'medium' ? 'high' : 'low';
-      save(); render();
+      syncTodo(t, { priority: t.priority === 'low' ? 'medium' : t.priority === 'medium' ? 'high' : 'low' });
     });
 
     const del = document.createElement('button');
     del.textContent = '✕'; del.className = 'del';
-    del.addEventListener('click', () => { todos = todos.filter(x => x.id !== t.id); save(); render(); });
+    del.addEventListener('click', async () => {
+      if (serverMode) { try { await api('/api/todos/' + t.id, { method: 'DELETE' }); } catch (e) { alert(e.message); return; } }
+      todos = todos.filter(x => x.id !== t.id); save(); render();
+    });
 
     // drag to reorder (manual sort only)
     li.addEventListener('dragstart', () => li.classList.add('dragging'));
@@ -123,9 +222,10 @@ function render() {
       const ids = [...list.querySelectorAll('li')].map(el => +el.dataset.id);
       const map = Object.fromEntries(todos.map(t => [t.id, t]));
       todos = ids.map(id => map[id]).filter(Boolean);
-      // keep any hidden items (filtered out) at the end in original order
       todos.push(...Object.values(map).filter(t => !ids.includes(t.id)));
-      save(); render();
+      if (serverMode) api('/api/todos/reorder', { method: 'POST', body: JSON.stringify({ ids }) }).catch(() => {});
+      else save();
+      render();
     });
     li.addEventListener('dragover', e => {
       e.preventDefault();
@@ -149,4 +249,11 @@ function render() {
   progressBar.style.width = pct + '%';
   progressLabel.textContent = todos.length ? `${pct}% complete` : '';
 }
-render();
+// boot: use server backend if available, else localStorage fallback
+(async () => {
+  await detectServer();
+  if (serverMode && token) { showApp(true); await loadTodos(); }
+  else if (serverMode) { showApp(false); }
+  else { appBox.classList.remove('hidden'); authBox.classList.add('hidden'); }
+  render();
+})();

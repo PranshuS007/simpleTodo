@@ -1,34 +1,46 @@
 # ✅ simpleTodo
 
-A simple, no-build todo app with dark mode, priorities, due dates, search, sorting, drag-to-reorder, and a progress bar. Just open `index.html` in a browser — no dependencies.
+A todo app with user accounts, a Postgres backend, and a full-featured UI (dark mode, priorities, due dates, search, sorting, drag-to-reorder, progress bar). Works with the server backend **or** standalone with `localStorage` (just open `index.html`).
 
 ![Todo App Screenshot](screenshot.png)
 
 ## Features
 
-- ➕ Add / complete / delete todos
-- ✏️ Double-click a todo to edit it
+- 🔐 Simple auth — register / login with email + password, token session (7 days)
+- 🐘 Postgres storage per user (SQLite fallback for local dev without Postgres)
+- ➕ Add / complete / delete todos, ✏️ double-click to edit
 - 🌙 Dark / light theme toggle (saved)
 - 🔴 Priority levels — Low / Medium / High (click badge to cycle)
 - 📅 Due dates with ⚠️ overdue highlighting
 - 🔍 Live search
 - ↕️ Sort by priority, due date, or newest — plus drag-to-reorder in Manual mode
 - 📊 Progress bar showing % complete
-- 💾 Everything persists in `localStorage`
 
-## Run
-
-Open `index.html` in any browser, or serve the folder:
+## Run with backend (auth + Postgres)
 
 ```sh
-python -m http.server
+pip install -r requirements.txt
+# create db + tables:
+#   createdb simpletodo && psql simpletodo -f schema.sql
+export DATABASE_URL=postgresql://user:pass@localhost:5432/simpletodo
+export AUTH_SECRET=a-long-random-string
+python server.py   # serves the app + API at http://localhost:5000
 ```
+
+Without `DATABASE_URL` it uses a local `tododb.sqlite` file — same API, no setup.
+
+## Standalone (no backend)
+
+Just open `index.html` in a browser — todos persist in `localStorage`, no login needed.
 
 ## Files
 
 | File | What |
 |------|------|
-| `index.html` | App markup |
+| `index.html` | App markup (+ login/register box) |
 | `style.css` | Styling + dark theme |
-| `app.js` | App logic |
+| `app.js` | UI + API client with localStorage fallback |
+| `server.py` | Flask API + auth + Postgres/SQLite |
+| `schema.sql` | Postgres `users` + `todos` tables |
+| `requirements.txt` | `flask`, `psycopg2-binary` |
 | `screenshot.png` | App screenshot |
