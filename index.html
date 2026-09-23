@@ -14,8 +14,28 @@
   </div>
   <form id="todo-form">
     <input id="todo-input" type="text" placeholder="What needs to be done?" autocomplete="off" required>
+    <select id="priority-input" title="Priority">
+      <option value="low">🟢 Low</option>
+      <option value="medium" selected>🟡 Med</option>
+      <option value="high">🔴 High</option>
+    </select>
+    <input id="due-input" type="date" title="Due date">
     <button type="submit">Add</button>
   </form>
+  <div class="toolbar">
+    <input id="search-input" type="text" placeholder="🔍 Search todos..." autocomplete="off">
+  </div>
+  <div id="progress-wrap" title="Completion progress"><div id="progress-bar"></div></div>
+  <div id="progress-label"></div>
+  <div class="sort-row">
+    <label for="sort-select">Sort:</label>
+    <select id="sort-select">
+      <option value="manual">Manual (drag to reorder)</option>
+      <option value="priority">Priority</option>
+      <option value="due">Due date</option>
+      <option value="newest">Newest first</option>
+    </select>
+  </div>
   <div class="filters">
     <button data-filter="all" class="active">All</button>
     <button data-filter="active">Active</button>
