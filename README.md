@@ -29,6 +29,29 @@ python server.py   # serves the app + API at http://localhost:5000
 
 Without `DATABASE_URL` it uses a local `tododb.sqlite` file — same API, no setup.
 
+## API reference
+
+| Method | Endpoint | Auth | Body | What |
+|--------|----------|------|------|------|
+| POST | `/api/register` | — | `{email, password}` | Create account → `{token, email}` |
+| POST | `/api/login` | — | `{email, password}` | Log in → `{token, email}` |
+| GET | `/api/todos` | Bearer token | — | List your todos |
+| POST | `/api/todos` | Bearer token | `{text, priority?, due?}` | Add a todo |
+| PATCH | `/api/todos/:id` | Bearer token | `{text?, done?, priority?, due?}` | Update a todo |
+| DELETE | `/api/todos/:id` | Bearer token | — | Delete a todo |
+| POST | `/api/todos/reorder` | Bearer token | `{ids: [...]}` | Save manual order |
+
+Passwords need min 4 chars; tokens expire after 7 days.
+
+## Verify it works
+
+1. `python server.py` → open http://localhost:5000
+2. Register a new account, add a todo, reload — it should persist
+3. Open the app in another browser / incognito — your todos should *not* be there until you log in
+4. `curl -X POST localhost:5000/api/todos -H "Content-Type: application/json" -d '{"text":"x"}'` → expect `401 unauthorized` (auth is enforced)
+
+> ⚠️ Note: the Postgres path hasn't been live-tested in this workspace (no Postgres available here — SQLite fallback was used). Please run the verify steps above against your own Postgres before treating it as production-ready.
+
 ## Standalone (no backend)
 
 Just open `index.html` in a browser — todos persist in `localStorage`, no login needed.
